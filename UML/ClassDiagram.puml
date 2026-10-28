@@ -1,0 +1,238 @@
+@startuml ClassDiagram
+title Діаграма класів (Class Diagram) — Лабораторна робота №2*\nАрхітектура патернів Strategy, Factory Method, Singleton (ФКНК КНУ, Варіант 9)
+
+skinparam defaultFontName "Segoe UI"
+skinparam roundcorner 8
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+
+skinparam package {
+    BackgroundColor #f8fafc
+    BorderColor #64748b
+    FontColor #0f172a
+}
+
+skinparam class {
+    BackgroundColor #ffffff
+    BorderColor #3b82f6
+    HeaderBackgroundColor #eff6ff
+    FontColor #0f172a
+    ArrowColor #2563eb
+}
+
+skinparam interface {
+    BackgroundColor #ffffff
+    BorderColor #10b981
+    HeaderBackgroundColor #ecfdf5
+    FontColor #065f46
+}
+
+' -------------------------------------------------------------
+' ПАКЕТ МОДЕЛЕЙ ДАНИХ (Models)
+' -------------------------------------------------------------
+package "XmlProcessorApp.Models" {
+    class SoftwareItem {
+        + Department: string
+        + DepartmentCode: string
+        + Name: string
+        + Version: string
+        + Category: string
+        + Author: string
+        + License: string
+        + Description: string
+        + DistributionLocation: string
+        + Requirements: string
+        + MaintainedBy: string
+        + Attributes: Dictionary<string, string>
+        + ToString(): string
+    }
+
+    class SearchFilter {
+        + Keyword: string?
+        + Department: string?
+        + Category: string?
+        + Author: string?
+        + License: string?
+        + IsEmpty: bool
+        + Matches(item: SoftwareItem): bool
+        + ToString(): string
+    }
+}
+
+' -------------------------------------------------------------
+' ПАКЕТ ПАТЕРНУ STRATEGY (Стратегія парсингу XML)
+' -------------------------------------------------------------
+package "XmlProcessorApp.Strategies (Патерн Strategy)" {
+    interface IXmlSearchStrategy <<interface>> {
+        + Name: string {get}
+        + Technology: string {get}
+        + Description: string {get}
+        + Search(xmlStream: Stream, filter: SearchFilter): List<SoftwareItem>
+    }
+
+    class SaxXmlSearchStrategy implements IXmlSearchStrategy {
+        + Name: string
+        + Technology: string
+        + Description: string
+        + Search(xmlStream: Stream, filter: SearchFilter): List<SoftwareItem>
+        - ReadChildElements(reader: XmlReader, item: SoftwareItem): void
+    }
+
+    class DomXmlSearchStrategy implements IXmlSearchStrategy {
+        + Name: string
+        + Technology: string
+        + Description: string
+        + Search(xmlStream: Stream, filter: SearchFilter): List<SoftwareItem>
+        - BuildXPath(filter: SearchFilter): string
+        - FormatXPathLiteral(val: string): string
+        - ParseElement(element: XmlElement): SoftwareItem
+        - GetAttr(el: XmlElement, name: string): string
+    }
+
+    class LinqXmlSearchStrategy implements IXmlSearchStrategy {
+        + Name: string
+        + Technology: string
+        + Description: string
+        + Search(xmlStream: Stream, filter: SearchFilter): List<SoftwareItem>
+    }
+
+    class XmlSearchContext {
+        + CurrentStrategy: IXmlSearchStrategy
+        + {static} AvailableStrategies: IReadOnlyList<IXmlSearchStrategy>
+        + XmlSearchContext(initialStrategy: IXmlSearchStrategy?)
+        + ExecuteSearch(xmlStream: Stream, filter: SearchFilter): List<SoftwareItem>
+    }
+
+    XmlSearchContext o--> IXmlSearchStrategy : "зберігає посилання\nна поточну стратегію"
+}
+
+' -------------------------------------------------------------
+' ПАКЕТ ПАТЕРНУ FACTORY METHOD (Фабричний метод експорту)
+' -------------------------------------------------------------
+package "XmlProcessorApp.Export (Патерн Factory Method)" {
+    interface IDataExporter <<interface (Product)>> {
+        + FormatName: string {get}
+        + DefaultExtension: string {get}
+        + MimeType: string {get}
+        + WriteDataAsync(items: List<SoftwareItem>, destinationStream: Stream): Task
+    }
+
+    class XmlDataExporter implements IDataExporter {
+        + FormatName: string
+        + DefaultExtension: string
+        + MimeType: string
+        + WriteDataAsync(items: List<SoftwareItem>, destinationStream: Stream): Task
+    }
+
+    class HtmlDataExporter implements IDataExporter {
+        - _xslStream: Stream?
+        + FormatName: string
+        + DefaultExtension: string
+        + MimeType: string
+        + HtmlDataExporter(xslStream: Stream?)
+        + WriteDataAsync(items: List<SoftwareItem>, destinationStream: Stream): Task
+    }
+
+    abstract class GoogleDriveExportService <<abstract (Creator)>> {
+        + ExportAsync(items: List<SoftwareItem>, fileName: string, driveManager: GoogleDriveManager): Task<string>
+        # {abstract} CreateExporter(): IDataExporter
+    }
+
+    class GoogleDriveXmlExportService extends GoogleDriveExportService {
+        # CreateExporter(): IDataExporter
+    }
+
+    class GoogleDriveHtmlExportService extends GoogleDriveExportService {
+        # CreateExporter(): IDataExporter
+    }
+
+    GoogleDriveExportService .right.> IDataExporter : "<<creates>>"
+    GoogleDriveXmlExportService ..> XmlDataExporter : "<<instantiates>>"
+    GoogleDriveHtmlExportService ..> HtmlDataExporter : "<<instantiates>>"
+}
+
+' -------------------------------------------------------------
+' ПАКЕТ ПАТЕРНУ SINGLETON (Одинак - Логер подій)
+' -------------------------------------------------------------
+package "XmlProcessorApp.Logging (Патерн Singleton)" {
+    enum LogCategory <<enum>> {
+        Filter
+        Transform
+        Save
+    }
+
+    class LogEntry {
+        + Timestamp: DateTime
+        + Category: LogCategory
+        + Message: string
+        + LogEntry(category: LogCategory, message: string)
+        + ToString(): string
+    }
+
+    class AppLogger <<sealed (Singleton)>> {
+        - {static} _instance: Lazy<AppLogger>
+        - _lock: object
+        - _logFilePath: string
+        + {static} Instance: AppLogger {get}
+        + LogFilePath: string {get}
+        + RecentLogs: ObservableCollection<LogEntry> {get}
+        + LogAdded: Action<LogEntry>?
+        - AppLogger()
+        + Log(category: LogCategory, message: string): void
+        + ReadAllLogs(): string
+        + ClearLog(): void
+    }
+
+    AppLogger o--> LogEntry : "колекція RecentLogs"
+    LogEntry --> LogCategory : "використовує рівень"
+}
+
+' -------------------------------------------------------------
+' СЕРВІСИ ТА КЛІЄНТ (UI)
+' -------------------------------------------------------------
+package "XmlProcessorApp.Services" {
+    class XmlTransformer {
+        + {static} TransformToHtml(xmlStream: Stream, xslStream: Stream): string
+        + {static} TransformItemsToHtml(items: List<SoftwareItem>, xslStream: Stream): string
+    }
+
+    class GoogleDriveManager {
+        - _driveService: DriveService?
+        + UploadFileAsync(stream: Stream, fileName: string, mimeType: string): Task<string>
+        + ListXmlFilesAsync(): Task<List<File>>
+        + DownloadFileAsync(fileId: string, outputStream: Stream): Task
+        - GetDriveServiceAsync(): Task<DriveService>
+    }
+}
+
+package "XmlProcessorApp (UI Presentation)" {
+    class MainPage {
+        - _searchContext: XmlSearchContext
+        - _driveManager: GoogleDriveManager
+        - _currentXmlBytes: byte[]?
+        - _allItems: List<SoftwareItem>
+        - _filteredItems: List<SoftwareItem>
+        - _lastGeneratedHtml: string
+        + MainPage()
+        - ExecuteSearch(): void
+        - PopulateDynamicFilters(items: List<SoftwareItem>): void
+        - TransformHtml_Clicked(sender: object, e: EventArgs): void
+        - ExportXmlDrive_Clicked(sender: object, e: EventArgs): void
+        - ExportHtmlDrive_Clicked(sender: object, e: EventArgs): void
+    }
+}
+
+' Зв'язки головного вікна (UI) із підсистемами
+MainPage o--> XmlSearchContext : "використовує контекст"
+MainPage o--> GoogleDriveManager : "хмарна авторизація"
+MainPage ..> GoogleDriveExportService : "виклик фабрики експорту"
+MainPage ..> XmlTransformer : "XSLT трансформація"
+MainPage ..> AppLogger : "підписка на лог"
+MainPage ..> SoftwareItem : "відображає картки"
+
+' Сервіси використовують логер
+XmlSearchContext ..> AppLogger : "логує фільтрацію"
+XmlTransformer ..> AppLogger : "логує трансформацію"
+GoogleDriveExportService ..> AppLogger : "логує збереження"
+
+@enduml
