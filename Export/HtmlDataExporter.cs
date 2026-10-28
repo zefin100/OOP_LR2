@@ -35,12 +35,20 @@ namespace XmlProcessorApp.Export
             }
             else
             {
-                // Використовуємо файл стилів за замовчуванням
-                string xslPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data", "SoftwareReport.xsl");
-                if (!File.Exists(xslPath))
+                // Пошук файлу стилів у кількох можливих розташуваннях
+                string[] candidatePaths = new[]
                 {
-                    xslPath = Path.Combine(Directory.GetCurrentDirectory(), "Data", "SoftwareReport.xsl");
+                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data", "SoftwareReport.xsl"),
+                    Path.Combine(Directory.GetCurrentDirectory(), "Data", "SoftwareReport.xsl"),
+                    @"C:\My\Programming\OOP_LR2\Data\SoftwareReport.xsl"
+                };
+
+                string? xslPath = candidatePaths.FirstOrDefault(File.Exists);
+                if (xslPath == null)
+                {
+                    throw new FileNotFoundException("Файл стилів XSLT 'SoftwareReport.xsl' не знайдено.");
                 }
+
                 xslToUse = File.OpenRead(xslPath);
                 disposeXsl = true;
             }

@@ -40,8 +40,8 @@ namespace XmlProcessorApp.Strategies
                     {
                         if (reader.Name.Equals("Department", StringComparison.OrdinalIgnoreCase))
                         {
-                            currentDept = reader.GetAttribute("name") ?? string.Empty;
-                            currentDeptCode = reader.GetAttribute("code") ?? string.Empty;
+                            currentDept = reader.GetAttribute("name") ?? reader.GetAttribute("Name") ?? string.Empty;
+                            currentDeptCode = reader.GetAttribute("code") ?? reader.GetAttribute("Code") ?? string.Empty;
                         }
                         else if (reader.Name.Equals("Software", StringComparison.OrdinalIgnoreCase))
                         {
@@ -49,11 +49,11 @@ namespace XmlProcessorApp.Strategies
                             {
                                 Department = currentDept,
                                 DepartmentCode = currentDeptCode,
-                                Name = reader.GetAttribute("Name") ?? string.Empty,
-                                Version = reader.GetAttribute("Version") ?? string.Empty,
-                                Category = reader.GetAttribute("Category") ?? string.Empty,
-                                Author = reader.GetAttribute("Author") ?? string.Empty,
-                                License = reader.GetAttribute("License") ?? string.Empty
+                                Name = reader.GetAttribute("Name") ?? reader.GetAttribute("name") ?? string.Empty,
+                                Version = reader.GetAttribute("Version") ?? reader.GetAttribute("version") ?? string.Empty,
+                                Category = reader.GetAttribute("Category") ?? reader.GetAttribute("category") ?? string.Empty,
+                                Author = reader.GetAttribute("Author") ?? reader.GetAttribute("author") ?? string.Empty,
+                                License = reader.GetAttribute("License") ?? reader.GetAttribute("license") ?? string.Empty
                             };
 
                             // Зчитуємо всі наявні атрибути вузла (різна кількість згідно з вимогою методички)
@@ -66,7 +66,7 @@ namespace XmlProcessorApp.Strategies
                                 reader.MoveToElement(); // повертаємося до самого елемента
                             }
 
-                            // Якщо це порожній елемент <Software ... />, то дочірніх тегів немає
+                            // Якщо це не порожній елемент <Software ... />, то читаємо дочірні теги
                             if (!reader.IsEmptyElement)
                             {
                                 ReadChildElements(reader, item);
@@ -77,6 +77,12 @@ namespace XmlProcessorApp.Strategies
                                 results.Add(item);
                             }
                         }
+                    }
+                    else if (reader.NodeType == XmlNodeType.EndElement &&
+                             reader.Name.Equals("Department", StringComparison.OrdinalIgnoreCase))
+                    {
+                        currentDept = string.Empty;
+                        currentDeptCode = string.Empty;
                     }
                 }
             }
@@ -101,7 +107,23 @@ namespace XmlProcessorApp.Strategies
                 if (reader.NodeType == XmlNodeType.Element)
                 {
                     string elName = reader.Name;
-                    string elText = reader.ReadElementContentAsString();
+                    string elText;
+                    try
+                    {
+                        elText = reader.ReadElementContentAsString().Trim();
+                    }
+                    catch
+                    {
+                        // Fallback якщо елемент містить змішаний вміст або вкладені теги
+                        try
+                        {
+                            elText = reader.ReadInnerXml().Trim();
+                        }
+                        catch
+                        {
+                            elText = string.Empty;
+                        }
+                    }
 
                     switch (elName.ToLowerInvariant())
                     {

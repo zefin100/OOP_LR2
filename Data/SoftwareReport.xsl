@@ -113,6 +113,12 @@
             <xsl:value-of select="/FacultySoftwareNetwork/@faculty"/>
           </div>
 
+          <xsl:if test="count(/FacultySoftwareNetwork/Department/Software) = 0">
+            <div style="text-align: center; padding: 30px; color: #64748b; font-size: 16px; background-color: #f1f5f9; border-radius: 8px; margin: 20px 0;">
+              🔍 За вказаними критеріями пошуку не знайдено жодного програмного засобу.
+            </div>
+          </xsl:if>
+
           <xsl:for-each select="/FacultySoftwareNetwork/Department">
             <div class="dept-section">
               <div class="dept-title">

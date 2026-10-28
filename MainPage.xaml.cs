@@ -32,7 +32,14 @@ namespace XmlProcessorApp
             _driveManager = new GoogleDriveManager();
 
             StrategyPicker.SelectedIndex = 0; // За замовчуванням LINQ to XML
-            AppLogger.Instance.LogAdded += entry => Dispatcher.Dispatch(() => AppLogger.Instance.RecentLogs.Insert(0, entry));
+            AppLogger.Instance.LogAdded += entry => Dispatcher.Dispatch(() =>
+            {
+                AppLogger.Instance.RecentLogs.Insert(0, entry);
+                while (AppLogger.Instance.RecentLogs.Count > 200)
+                {
+                    AppLogger.Instance.RecentLogs.RemoveAt(AppLogger.Instance.RecentLogs.Count - 1);
+                }
+            });
             LogCollectionView.ItemsSource = AppLogger.Instance.RecentLogs;
             LogFilePathLabel.Text = $"Файл логу: {AppLogger.Instance.LogFilePath}";
 
@@ -44,13 +51,16 @@ namespace XmlProcessorApp
         {
             try
             {
-                string xmlPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data", "FacultySoftware.xml");
-                if (!File.Exists(xmlPath))
+                string[] candidatePaths = new[]
                 {
-                    xmlPath = Path.Combine(Directory.GetCurrentDirectory(), "Data", "FacultySoftware.xml");
-                }
+                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data", "FacultySoftware.xml"),
+                    Path.Combine(Directory.GetCurrentDirectory(), "Data", "FacultySoftware.xml"),
+                    @"C:\My\Programming\OOP_LR2\Data\FacultySoftware.xml"
+                };
 
-                if (File.Exists(xmlPath))
+                string? xmlPath = candidatePaths.FirstOrDefault(File.Exists);
+
+                if (xmlPath != null)
                 {
                     _currentXmlBytes = File.ReadAllBytes(xmlPath);
                     _currentXmlFileName = "FacultySoftware.xml";
@@ -265,10 +275,17 @@ namespace XmlProcessorApp
 
             try
             {
-                string xslPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data", "SoftwareReport.xsl");
-                if (!File.Exists(xslPath))
+                string[] candidatePaths = new[]
                 {
-                    xslPath = Path.Combine(Directory.GetCurrentDirectory(), "Data", "SoftwareReport.xsl");
+                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data", "SoftwareReport.xsl"),
+                    Path.Combine(Directory.GetCurrentDirectory(), "Data", "SoftwareReport.xsl"),
+                    @"C:\My\Programming\OOP_LR2\Data\SoftwareReport.xsl"
+                };
+
+                string? xslPath = candidatePaths.FirstOrDefault(File.Exists);
+                if (xslPath == null)
+                {
+                    throw new FileNotFoundException("Файл стилів XSLT 'SoftwareReport.xsl' не знайдено.");
                 }
 
                 using var xslStream = File.OpenRead(xslPath);

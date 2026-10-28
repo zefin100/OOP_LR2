@@ -25,23 +25,25 @@ namespace XmlProcessorApp.Strategies
             var doc = XDocument.Load(xmlStream);
 
             // Формуємо декларативний запит за зразком з лекцій
-            var query = from dept in doc.Descendants("Department")
-                        let deptName = (string?)dept.Attribute("name") ?? string.Empty
-                        let deptCode = (string?)dept.Attribute("code") ?? string.Empty
-                        from sw in dept.Elements("Software")
+            var query = from dept in doc.Descendants()
+                        where dept.Name.LocalName.Equals("Department", StringComparison.OrdinalIgnoreCase)
+                        let deptName = (string?)dept.Attribute("name") ?? (string?)dept.Attribute("Name") ?? string.Empty
+                        let deptCode = (string?)dept.Attribute("code") ?? (string?)dept.Attribute("Code") ?? string.Empty
+                        from sw in dept.Elements()
+                        where sw.Name.LocalName.Equals("Software", StringComparison.OrdinalIgnoreCase)
                         select new SoftwareItem
                         {
                             Department = deptName,
                             DepartmentCode = deptCode,
-                            Name = (string?)sw.Attribute("Name") ?? string.Empty,
-                            Version = (string?)sw.Attribute("Version") ?? string.Empty,
-                            Category = (string?)sw.Attribute("Category") ?? string.Empty,
-                            Author = (string?)sw.Attribute("Author") ?? string.Empty,
-                            License = (string?)sw.Attribute("License") ?? string.Empty,
-                            Description = (string?)sw.Element("Description") ?? string.Empty,
-                            DistributionLocation = (string?)sw.Element("DistributionLocation") ?? string.Empty,
-                            Requirements = (string?)sw.Element("Requirements") ?? string.Empty,
-                            MaintainedBy = (string?)sw.Element("MaintainedBy") ?? string.Empty,
+                            Name = (string?)sw.Attribute("Name") ?? (string?)sw.Attribute("name") ?? string.Empty,
+                            Version = (string?)sw.Attribute("Version") ?? (string?)sw.Attribute("version") ?? string.Empty,
+                            Category = (string?)sw.Attribute("Category") ?? (string?)sw.Attribute("category") ?? string.Empty,
+                            Author = (string?)sw.Attribute("Author") ?? (string?)sw.Attribute("author") ?? string.Empty,
+                            License = (string?)sw.Attribute("License") ?? (string?)sw.Attribute("license") ?? string.Empty,
+                            Description = sw.Elements().FirstOrDefault(e => e.Name.LocalName.Equals("Description", StringComparison.OrdinalIgnoreCase))?.Value.Trim() ?? string.Empty,
+                            DistributionLocation = sw.Elements().FirstOrDefault(e => e.Name.LocalName.Equals("DistributionLocation", StringComparison.OrdinalIgnoreCase))?.Value.Trim() ?? string.Empty,
+                            Requirements = sw.Elements().FirstOrDefault(e => e.Name.LocalName.Equals("Requirements", StringComparison.OrdinalIgnoreCase))?.Value.Trim() ?? string.Empty,
+                            MaintainedBy = sw.Elements().FirstOrDefault(e => e.Name.LocalName.Equals("MaintainedBy", StringComparison.OrdinalIgnoreCase))?.Value.Trim() ?? string.Empty,
                             Attributes = sw.Attributes().ToDictionary(
                                 a => a.Name.LocalName,
                                 a => a.Value,
