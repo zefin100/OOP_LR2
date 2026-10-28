@@ -8,17 +8,17 @@
 
     <Grid RowDefinitions="Auto,Auto,Auto,*" Margin="10" RowSpacing="10">
 
-        <!-- 1. Верхня панель дій -->
-        <FlexLayout Grid.Row="0" Wrap="Wrap" JustifyContent="Start" AlignItems="Center">
-            <Button Text="📁 Завантажити XML (Локально)" Clicked="LoadLocalXml_Clicked" Margin="3" BackgroundColor="#2563eb" TextColor="White" />
-            <Button Text="☁️ Завантажити з Google Drive" Clicked="LoadDriveXml_Clicked" Margin="3" BackgroundColor="#0284c7" TextColor="White" />
-            <Button Text="🌐 XSLT Трансформація в HTML" Clicked="TransformHtml_Clicked" Margin="3" BackgroundColor="#7c3aed" TextColor="White" />
-            <Button Text="📤 Експорт XML на Drive" Clicked="ExportXmlDrive_Clicked" Margin="3" BackgroundColor="#059669" TextColor="White" />
-            <Button Text="📤 Експорт HTML на Drive" Clicked="ExportHtmlDrive_Clicked" Margin="3" BackgroundColor="#0d9488" TextColor="White" />
-            <Button Text="📜 Журнал подій (Лог)" Clicked="ToggleLogView_Clicked" Margin="3" BackgroundColor="#475569" TextColor="White" />
-            <Button Text="ℹ️ Довідка" Clicked="HelpButton_Clicked" Margin="3" BackgroundColor="#334155" TextColor="White" />
-            <Button Text="❌ Вихід" Clicked="ExitButton_Clicked" Margin="3" BackgroundColor="#dc2626" TextColor="White" />
-        </FlexLayout>
+        <!-- 1. Верхня панель дій (компактний один рядок для будь-якої роздільної здатності) -->
+        <HorizontalStackLayout Grid.Row="0" Spacing="6" VerticalOptions="Center">
+            <Button Text="📁 Відкрити XML" Clicked="LoadLocalXml_Clicked" BackgroundColor="#2563eb" TextColor="White" HeightRequest="36" Padding="12,0" FontSize="12" FontAttributes="Bold" CornerRadius="6" />
+            <Button Text="☁️ З Google Drive" Clicked="LoadDriveXml_Clicked" BackgroundColor="#0284c7" TextColor="White" HeightRequest="36" Padding="12,0" FontSize="12" FontAttributes="Bold" CornerRadius="6" />
+            <Button Text="🌐 XSLT у HTML" Clicked="TransformHtml_Clicked" BackgroundColor="#7c3aed" TextColor="White" HeightRequest="36" Padding="12,0" FontSize="12" FontAttributes="Bold" CornerRadius="6" />
+            <Button Text="📤 XML на Drive" Clicked="ExportXmlDrive_Clicked" BackgroundColor="#059669" TextColor="White" HeightRequest="36" Padding="12,0" FontSize="12" FontAttributes="Bold" CornerRadius="6" />
+            <Button Text="📤 HTML на Drive" Clicked="ExportHtmlDrive_Clicked" BackgroundColor="#0d9488" TextColor="White" HeightRequest="36" Padding="12,0" FontSize="12" FontAttributes="Bold" CornerRadius="6" />
+            <Button Text="📜 Журнал логів" Clicked="ToggleLogView_Clicked" BackgroundColor="#475569" TextColor="White" HeightRequest="36" Padding="12,0" FontSize="12" FontAttributes="Bold" CornerRadius="6" />
+            <Button Text="ℹ️ Довідка" Clicked="HelpButton_Clicked" BackgroundColor="#334155" TextColor="White" HeightRequest="36" Padding="12,0" FontSize="12" FontAttributes="Bold" CornerRadius="6" />
+            <Button Text="❌ Вихід" Clicked="ExitButton_Clicked" BackgroundColor="#dc2626" TextColor="White" HeightRequest="36" Padding="12,0" FontSize="12" FontAttributes="Bold" CornerRadius="6" />
+        </HorizontalStackLayout>
 
         <!-- 2. Панель фільтрів та вибору стратегії -->
         <Border Grid.Row="1" Stroke="#cbd5e1" StrokeThickness="1" BackgroundColor="#f8fafc" Padding="12" StrokeShape="RoundRectangle 8">
