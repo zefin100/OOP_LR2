@@ -23,6 +23,7 @@ namespace XmlProcessorApp
         private List<SoftwareItem> _allItems = new();
         private List<SoftwareItem> _filteredItems = new();
         private string _lastGeneratedHtml = string.Empty;
+        private bool _isPopulatingFilters = false;
 
         public MainPage()
         {
@@ -96,29 +97,40 @@ namespace XmlProcessorApp
         /// </summary>
         private void PopulateDynamicFilters(List<SoftwareItem> items)
         {
-            // Кафедри
-            var departments = new List<string> { "Всі кафедри" };
-            departments.AddRange(items.Select(i => i.Department).Where(d => !string.IsNullOrWhiteSpace(d)).Distinct().OrderBy(d => d));
-            DepartmentPicker.ItemsSource = departments;
-            DepartmentPicker.SelectedIndex = 0;
+            if (items == null || items.Count == 0) return;
 
-            // Категорії / Вид ПЗ
-            var categories = new List<string> { "Всі категорії" };
-            categories.AddRange(items.Select(i => i.Category).Where(c => !string.IsNullOrWhiteSpace(c)).Distinct().OrderBy(c => c));
-            CategoryPicker.ItemsSource = categories;
-            CategoryPicker.SelectedIndex = 0;
+            try
+            {
+                _isPopulatingFilters = true;
 
-            // Автори / Розробники
-            var authors = new List<string> { "Всі автори" };
-            authors.AddRange(items.Select(i => i.Author).Where(a => !string.IsNullOrWhiteSpace(a)).Distinct().OrderBy(a => a));
-            AuthorPicker.ItemsSource = authors;
-            AuthorPicker.SelectedIndex = 0;
+                // Кафедри
+                var departments = new List<string> { "Всі кафедри" };
+                departments.AddRange(items.Select(i => i.Department).Where(d => !string.IsNullOrWhiteSpace(d)).Distinct().OrderBy(d => d));
+                DepartmentPicker.ItemsSource = departments;
+                DepartmentPicker.SelectedIndex = 0;
 
-            // Ліцензії / Умови використання
-            var licenses = new List<string> { "Всі ліцензії" };
-            licenses.AddRange(items.Select(i => i.License).Where(l => !string.IsNullOrWhiteSpace(l)).Distinct().OrderBy(l => l));
-            LicensePicker.ItemsSource = licenses;
-            LicensePicker.SelectedIndex = 0;
+                // Категорії / Вид ПЗ
+                var categories = new List<string> { "Всі категорії" };
+                categories.AddRange(items.Select(i => i.Category).Where(c => !string.IsNullOrWhiteSpace(c)).Distinct().OrderBy(c => c));
+                CategoryPicker.ItemsSource = categories;
+                CategoryPicker.SelectedIndex = 0;
+
+                // Автори / Розробники
+                var authors = new List<string> { "Всі автори" };
+                authors.AddRange(items.Select(i => i.Author).Where(a => !string.IsNullOrWhiteSpace(a)).Distinct().OrderBy(a => a));
+                AuthorPicker.ItemsSource = authors;
+                AuthorPicker.SelectedIndex = 0;
+
+                // Ліцензії / Умови використання
+                var licenses = new List<string> { "Всі ліцензії" };
+                licenses.AddRange(items.Select(i => i.License).Where(l => !string.IsNullOrWhiteSpace(l)).Distinct().OrderBy(l => l));
+                LicensePicker.ItemsSource = licenses;
+                LicensePicker.SelectedIndex = 0;
+            }
+            finally
+            {
+                _isPopulatingFilters = false;
+            }
         }
 
         private void ExecuteSearch()
@@ -158,6 +170,7 @@ namespace XmlProcessorApp
 
         private void OnFilterChanged(object sender, EventArgs e)
         {
+            if (_isPopulatingFilters) return;
             // Автоматичний динамічний пошук при зміні будь-якого випадаючого списку
             ExecuteSearch();
         }

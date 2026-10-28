@@ -24,42 +24,128 @@
         <Border Grid.Row="1" Stroke="#cbd5e1" StrokeThickness="1" BackgroundColor="#f8fafc" Padding="12" StrokeShape="RoundRectangle 8">
             <VerticalStackLayout Spacing="8">
                 <!-- Рядок 1: Стратегія та Ключове слово -->
-                <Grid ColumnDefinitions="Auto,*,Auto,2*" ColumnSpacing="10">
+                <Grid ColumnDefinitions="Auto,*,Auto,2*" ColumnSpacing="10" VerticalOptions="Center">
                     <Label Text="Стратегія парсингу:" VerticalOptions="Center" FontAttributes="Bold" Grid.Column="0" TextColor="#1e293b" />
-                    <Picker x:Name="StrategyPicker" Grid.Column="1" Title="Оберіть стратегію" SelectedIndexChanged="StrategyPicker_SelectedIndexChanged" TextColor="#0f172a">
-                        <Picker.ItemsSource>
-                            <x:Array Type="{x:Type x:String}">
-                                <x:String>LINQ to XML (XDocument)</x:String>
-                                <x:String>DOM API (XmlDocument + XPath)</x:String>
-                                <x:String>SAX API (XmlReader)</x:String>
-                            </x:Array>
-                        </Picker.ItemsSource>
-                    </Picker>
+                    <Border Grid.Column="1" BackgroundColor="#ffffff" Stroke="#94a3b8" StrokeThickness="1" StrokeShape="RoundRectangle 6" Padding="6,0" HeightRequest="40">
+                        <Picker x:Name="StrategyPicker" TextColor="#0f172a" BackgroundColor="Transparent" VerticalOptions="Center" SelectedIndexChanged="StrategyPicker_SelectedIndexChanged">
+                            <Picker.ItemsSource>
+                                <x:Array Type="{x:Type x:String}">
+                                    <x:String>LINQ to XML (XDocument)</x:String>
+                                    <x:String>DOM API (XmlDocument + XPath)</x:String>
+                                    <x:String>SAX API (XmlReader)</x:String>
+                                </x:Array>
+                            </Picker.ItemsSource>
+                        </Picker>
+                    </Border>
 
                     <Label Text="Ключове слово:" VerticalOptions="Center" FontAttributes="Bold" Grid.Column="2" TextColor="#1e293b" />
-                    <Entry x:Name="KeywordEntry" Grid.Column="3" Placeholder="Введіть текст для пошуку (назва, опис, дистрибутив)..." TextColor="#0f172a" Completed="SearchButton_Clicked" TextChanged="OnKeywordChanged" />
+                    <Border Grid.Column="3" BackgroundColor="#ffffff" Stroke="#94a3b8" StrokeThickness="1" StrokeShape="RoundRectangle 6" Padding="8,0" HeightRequest="40">
+                        <Entry x:Name="KeywordEntry" Placeholder="Введіть текст для пошуку (назва, опис, дистрибутив)..." TextColor="#0f172a" BackgroundColor="Transparent" VerticalOptions="Center" Completed="SearchButton_Clicked" TextChanged="OnKeywordChanged" />
+                    </Border>
                 </Grid>
 
                 <!-- Рядок 2: Динамічні атрибути (Підгрузка даних) -->
-                <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="10">
-                    <VerticalStackLayout Grid.Column="0">
-                        <Label Text="Кафедра:" FontSize="12" FontAttributes="Bold" TextColor="#475569" />
-                        <Picker x:Name="DepartmentPicker" Title="Всі кафедри" SelectedIndexChanged="OnFilterChanged" />
+                <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="12" Margin="0,4">
+                    <!-- Кафедра -->
+                    <VerticalStackLayout Grid.Column="0" Spacing="4">
+                        <Label Text="🏛 Кафедра:" FontSize="13" FontAttributes="Bold" TextColor="#334155" />
+                        <Border BackgroundColor="#ffffff" Stroke="#94a3b8" StrokeThickness="1" StrokeShape="RoundRectangle 6" Padding="6,0" HeightRequest="44">
+                            <Picker x:Name="DepartmentPicker" 
+                                    TextColor="#0f172a" 
+                                    BackgroundColor="Transparent"
+                                    VerticalOptions="Center"
+                                    SelectedIndex="0"
+                                    SelectedIndexChanged="OnFilterChanged">
+                                <Picker.ItemsSource>
+                                    <x:Array Type="{x:Type x:String}">
+                                        <x:String>Всі кафедри</x:String>
+                                        <x:String>Кафедра теоретичної кібернетики</x:String>
+                                        <x:String>Кафедра математичної інформатики</x:String>
+                                        <x:String>Кафедра інформаційних систем</x:String>
+                                    </x:Array>
+                                </Picker.ItemsSource>
+                            </Picker>
+                        </Border>
                     </VerticalStackLayout>
 
-                    <VerticalStackLayout Grid.Column="1">
-                        <Label Text="Вид (Категорія):" FontSize="12" FontAttributes="Bold" TextColor="#475569" />
-                        <Picker x:Name="CategoryPicker" Title="Всі категорії" SelectedIndexChanged="OnFilterChanged" />
+                    <!-- Вид (Категорія) -->
+                    <VerticalStackLayout Grid.Column="1" Spacing="4">
+                        <Label Text="🏷️ Вид (Категорія):" FontSize="13" FontAttributes="Bold" TextColor="#334155" />
+                        <Border BackgroundColor="#ffffff" Stroke="#94a3b8" StrokeThickness="1" StrokeShape="RoundRectangle 6" Padding="6,0" HeightRequest="44">
+                            <Picker x:Name="CategoryPicker" 
+                                    TextColor="#0f172a" 
+                                    BackgroundColor="Transparent"
+                                    VerticalOptions="Center"
+                                    SelectedIndex="0"
+                                    SelectedIndexChanged="OnFilterChanged">
+                                <Picker.ItemsSource>
+                                    <x:Array Type="{x:Type x:String}">
+                                        <x:String>Всі категорії</x:String>
+                                        <x:String>IDE</x:String>
+                                        <x:String>Database</x:String>
+                                        <x:String>VCS</x:String>
+                                        <x:String>Network Tool</x:String>
+                                        <x:String>Scientific</x:String>
+                                        <x:String>Runtime</x:String>
+                                        <x:String>Data Science</x:String>
+                                        <x:String>DevOps</x:String>
+                                        <x:String>API Testing</x:String>
+                                    </x:Array>
+                                </Picker.ItemsSource>
+                            </Picker>
+                        </Border>
                     </VerticalStackLayout>
 
-                    <VerticalStackLayout Grid.Column="2">
-                        <Label Text="Автор / Розробник:" FontSize="12" FontAttributes="Bold" TextColor="#475569" />
-                        <Picker x:Name="AuthorPicker" Title="Всі автори" SelectedIndexChanged="OnFilterChanged" />
+                    <!-- Автор / Розробник -->
+                    <VerticalStackLayout Grid.Column="2" Spacing="4">
+                        <Label Text="👤 Автор / Розробник:" FontSize="13" FontAttributes="Bold" TextColor="#334155" />
+                        <Border BackgroundColor="#ffffff" Stroke="#94a3b8" StrokeThickness="1" StrokeShape="RoundRectangle 6" Padding="6,0" HeightRequest="44">
+                            <Picker x:Name="AuthorPicker" 
+                                    TextColor="#0f172a" 
+                                    BackgroundColor="Transparent"
+                                    VerticalOptions="Center"
+                                    SelectedIndex="0"
+                                    SelectedIndexChanged="OnFilterChanged">
+                                <Picker.ItemsSource>
+                                    <x:Array Type="{x:Type x:String}">
+                                        <x:String>Всі автори</x:String>
+                                        <x:String>Microsoft</x:String>
+                                        <x:String>PostgreSQL Global Development Group</x:String>
+                                        <x:String>MathWorks</x:String>
+                                        <x:String>Python Software Foundation</x:String>
+                                        <x:String>Docker Inc.</x:String>
+                                        <x:String>JetBrains</x:String>
+                                    </x:Array>
+                                </Picker.ItemsSource>
+                            </Picker>
+                        </Border>
                     </VerticalStackLayout>
 
-                    <VerticalStackLayout Grid.Column="3">
-                        <Label Text="Умови (Ліцензія):" FontSize="12" FontAttributes="Bold" TextColor="#475569" />
-                        <Picker x:Name="LicensePicker" Title="Всі ліцензії" SelectedIndexChanged="OnFilterChanged" />
+                    <!-- Умови (Ліцензія) -->
+                    <VerticalStackLayout Grid.Column="3" Spacing="4">
+                        <Label Text="📜 Умови (Ліцензія):" FontSize="13" FontAttributes="Bold" TextColor="#334155" />
+                        <Border BackgroundColor="#ffffff" Stroke="#94a3b8" StrokeThickness="1" StrokeShape="RoundRectangle 6" Padding="6,0" HeightRequest="44">
+                            <Picker x:Name="LicensePicker" 
+                                    TextColor="#0f172a" 
+                                    BackgroundColor="Transparent"
+                                    VerticalOptions="Center"
+                                    SelectedIndex="0"
+                                    SelectedIndexChanged="OnFilterChanged">
+                                <Picker.ItemsSource>
+                                    <x:Array Type="{x:Type x:String}">
+                                        <x:String>Всі ліцензії</x:String>
+                                        <x:String>Free/Community</x:String>
+                                        <x:String>PostgreSQL Open License</x:String>
+                                        <x:String>GPLv2</x:String>
+                                        <x:String>Campus Academic License</x:String>
+                                        <x:String>PSF License</x:String>
+                                        <x:String>AGPLv3</x:String>
+                                        <x:String>Docker Subscription</x:String>
+                                        <x:String>JetBrains Educational</x:String>
+                                    </x:Array>
+                                </Picker.ItemsSource>
+                            </Picker>
+                        </Border>
                     </VerticalStackLayout>
                 </Grid>
 
