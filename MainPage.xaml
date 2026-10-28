@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:models="clr-namespace:XmlProcessorApp.Models"
+             xmlns:logging="clr-namespace:XmlProcessorApp.Logging"
+             x:Class="XmlProcessorApp.MainPage"
+             Title="Обробник XML: Програмне забезпечення факультету">
+
+    <Grid RowDefinitions="Auto,Auto,Auto,*" Margin="10" RowSpacing="10">
+
+        <!-- 1. Верхня панель дій -->
+        <FlexLayout Grid.Row="0" Wrap="Wrap" JustifyContent="Start" AlignItems="Center">
+            <Button Text="📁 Завантажити XML (Локально)" Clicked="LoadLocalXml_Clicked" Margin="3" BackgroundColor="#2563eb" TextColor="White" />
+            <Button Text="☁️ Завантажити з Google Drive" Clicked="LoadDriveXml_Clicked" Margin="3" BackgroundColor="#0284c7" TextColor="White" />
+            <Button Text="🌐 XSLT Трансформація в HTML" Clicked="TransformHtml_Clicked" Margin="3" BackgroundColor="#7c3aed" TextColor="White" />
+            <Button Text="📤 Експорт XML на Drive" Clicked="ExportXmlDrive_Clicked" Margin="3" BackgroundColor="#059669" TextColor="White" />
+            <Button Text="📤 Експорт HTML на Drive" Clicked="ExportHtmlDrive_Clicked" Margin="3" BackgroundColor="#0d9488" TextColor="White" />
+            <Button Text="📜 Журнал подій (Лог)" Clicked="ToggleLogView_Clicked" Margin="3" BackgroundColor="#475569" TextColor="White" />
+            <Button Text="ℹ️ Довідка" Clicked="HelpButton_Clicked" Margin="3" BackgroundColor="#334155" TextColor="White" />
+            <Button Text="❌ Вихід" Clicked="ExitButton_Clicked" Margin="3" BackgroundColor="#dc2626" TextColor="White" />
+        </FlexLayout>
+
+        <!-- 2. Панель фільтрів та вибору стратегії -->
+        <Border Grid.Row="1" Stroke="#cbd5e1" StrokeThickness="1" BackgroundColor="#f8fafc" Padding="12" StrokeShape="RoundRectangle 8">
+            <VerticalStackLayout Spacing="8">
+                <!-- Рядок 1: Стратегія та Ключове слово -->
+                <Grid ColumnDefinitions="Auto,*,Auto,2*" ColumnSpacing="10">
+                    <Label Text="Стратегія парсингу:" VerticalOptions="Center" FontAttributes="Bold" Grid.Column="0" TextColor="#1e293b" />
+                    <Picker x:Name="StrategyPicker" Grid.Column="1" Title="Оберіть стратегію" SelectedIndexChanged="StrategyPicker_SelectedIndexChanged" TextColor="#0f172a">
+                        <Picker.ItemsSource>
+                            <x:Array Type="{x:Type x:String}">
+                                <x:String>LINQ to XML (XDocument)</x:String>
+                                <x:String>DOM API (XmlDocument + XPath)</x:String>
+                                <x:String>SAX API (XmlReader)</x:String>
+                            </x:Array>
+                        </Picker.ItemsSource>
+                    </Picker>
+
+                    <Label Text="Ключове слово:" VerticalOptions="Center" FontAttributes="Bold" Grid.Column="2" TextColor="#1e293b" />
+                    <Entry x:Name="KeywordEntry" Grid.Column="3" Placeholder="Введіть текст для пошуку (назва, опис, дистрибутив)..." TextColor="#0f172a" Completed="SearchButton_Clicked" />
+                </Grid>
+
+                <!-- Рядок 2: Динамічні атрибути (Підгрузка даних) -->
+                <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="10">
+                    <VerticalStackLayout Grid.Column="0">
+                        <Label Text="Кафедра:" FontSize="12" FontAttributes="Bold" TextColor="#475569" />
+                        <Picker x:Name="DepartmentPicker" Title="Всі кафедри" SelectedIndexChanged="OnFilterChanged" />
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout Grid.Column="1">
+                        <Label Text="Вид (Категорія):" FontSize="12" FontAttributes="Bold" TextColor="#475569" />
+                        <Picker x:Name="CategoryPicker" Title="Всі категорії" SelectedIndexChanged="OnFilterChanged" />
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout Grid.Column="2">
+                        <Label Text="Автор / Розробник:" FontSize="12" FontAttributes="Bold" TextColor="#475569" />
+                        <Picker x:Name="AuthorPicker" Title="Всі автори" SelectedIndexChanged="OnFilterChanged" />
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout Grid.Column="3">
+                        <Label Text="Умови (Ліцензія):" FontSize="12" FontAttributes="Bold" TextColor="#475569" />
+                        <Picker x:Name="LicensePicker" Title="Всі ліцензії" SelectedIndexChanged="OnFilterChanged" />
+                    </VerticalStackLayout>
+                </Grid>
+
+                <!-- Рядок 3: Кнопки Пошук та Очистити -->
+                <HorizontalStackLayout Spacing="10" HorizontalOptions="End" Margin="0,4,0,0">
+                    <Button Text="🔍 Фільтрувати / Пошук" Clicked="SearchButton_Clicked" BackgroundColor="#2563eb" TextColor="White" FontAttributes="Bold" HeightRequest="40" Padding="16,0" />
+                    <Button Text="🧹 Очистити (Clear)" Clicked="ClearButton_Clicked" BackgroundColor="#64748b" TextColor="White" HeightRequest="40" Padding="16,0" />
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
+        </Border>
+
+        <!-- 3. Інформаційна смуга стану -->
+        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="2,0">
+            <Label x:Name="StatusLabel" Text="Завантажте XML файл для початку роботи." FontAttributes="Italic" TextColor="#475569" VerticalOptions="Center" />
+            <Label x:Name="CountLabel" Text="Знайдено: 0" FontAttributes="Bold" TextColor="#0f172a" Grid.Column="1" VerticalOptions="Center" />
+        </Grid>
+
+        <!-- 4. Основна область вмісту (Результати / HTML перегляд / Журнал) -->
+        <Grid Grid.Row="3">
+            <!-- Список знайдених програмних засобів (Картки результатів) -->
+            <CollectionView x:Name="ResultsCollectionView" SelectionMode="None">
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout HorizontalOptions="Center" VerticalOptions="Center" Spacing="10" Margin="40">
+                        <Label Text="📦" FontSize="48" HorizontalOptions="Center" />
+                        <Label Text="Немає записів для відображення" FontSize="18" FontAttributes="Bold" HorizontalOptions="Center" TextColor="#64748b" />
+                        <Label Text="Спробуйте змінити критерії пошуку або завантажити файл." FontSize="14" HorizontalOptions="Center" TextColor="#94a3b8" />
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:SoftwareItem">
+                        <Border Stroke="#e2e8f0" StrokeThickness="1" BackgroundColor="#ffffff" Margin="0,4" Padding="14" StrokeShape="RoundRectangle 8">
+                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="6">
+                                <!-- Назва і версія -->
+                                <HorizontalStackLayout Grid.Row="0" Grid.Column="0" Spacing="8" VerticalOptions="Center">
+                                    <Label Text="{Binding Name}" FontSize="16" FontAttributes="Bold" TextColor="#0f172a" />
+                                    <Border BackgroundColor="#f3e8ff" StrokeThickness="0" Padding="6,2" StrokeShape="RoundRectangle 4">
+                                        <Label Text="{Binding Version, StringFormat='v{0}'}" FontSize="11" TextColor="#6b21a8" FontAttributes="Bold" />
+                                    </Border>
+                                </HorizontalStackLayout>
+
+                                <!-- Бейджі категорії та ліцензії -->
+                                <HorizontalStackLayout Grid.Row="0" Grid.Column="1" Spacing="6" VerticalOptions="Center">
+                                    <Border BackgroundColor="#dbeafe" StrokeThickness="0" Padding="6,2" StrokeShape="RoundRectangle 4">
+                                        <Label Text="{Binding Category}" FontSize="11" TextColor="#1e40af" FontAttributes="Bold" />
+                                    </Border>
+                                    <Border BackgroundColor="#dcfce7" StrokeThickness="0" Padding="6,2" StrokeShape="RoundRectangle 4">
+                                        <Label Text="{Binding License}" FontSize="11" TextColor="#166534" FontAttributes="Bold" />
+                                    </Border>
+                                </HorizontalStackLayout>
+
+                                <!-- Кафедра та автор -->
+                                <HorizontalStackLayout Grid.Row="1" Grid.ColumnSpan="2" Spacing="15">
+                                    <Label Text="{Binding Department, StringFormat='🏛 {0}'}" FontSize="13" TextColor="#3b82f6" FontAttributes="Bold" />
+                                    <Label Text="{Binding Author, StringFormat='👤 Розробник: {0}'}" FontSize="13" TextColor="#64748b" />
+                                </HorizontalStackLayout>
+
+                                <!-- Опис -->
+                                <Label Grid.Row="2" Grid.ColumnSpan="2" Text="{Binding Description}" FontSize="13" TextColor="#334155" />
+
+                                <!-- Розташування та вимоги -->
+                                <VerticalStackLayout Grid.Row="3" Grid.ColumnSpan="2" Spacing="2" Margin="0,4,0,0">
+                                    <Label Text="{Binding DistributionLocation, StringFormat='📂 Дистрибутив: {0}'}" FontSize="12" FontFamily="Consolas" TextColor="#475569" />
+                                    <Label Text="{Binding Requirements, StringFormat='⚙️ Вимоги: {0}'}" FontSize="11" TextColor="#94a3b8" />
+                                </VerticalStackLayout>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <!-- Панель перегляду згенерованого HTML-звіту -->
+            <Border x:Name="HtmlPreviewPanel" IsVisible="False" BackgroundColor="#ffffff" Stroke="#94a3b8" StrokeThickness="1" StrokeShape="RoundRectangle 8">
+                <Grid RowDefinitions="Auto,*">
+                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto" Padding="10" BackgroundColor="#f1f5f9">
+                        <Label Text="🌐 Попередній перегляд HTML-звіту (XSLT)" FontAttributes="Bold" TextColor="#0f172a" VerticalOptions="Center" />
+                        <Button Text="Відкрити у браузері" Clicked="OpenInBrowser_Clicked" Grid.Column="1" Margin="4,0" BackgroundColor="#3b82f6" TextColor="White" HeightRequest="35" />
+                        <Button Text="✖ Закрити перегляд" Clicked="CloseHtmlPreview_Clicked" Grid.Column="2" BackgroundColor="#64748b" TextColor="White" HeightRequest="35" />
+                    </Grid>
+                    <WebView x:Name="HtmlWebView" Grid.Row="1" />
+                </Grid>
+            </Border>
+
+            <!-- Панель журналу подій (Singleton Logger) -->
+            <Border x:Name="LogPanel" IsVisible="False" BackgroundColor="#ffffff" Stroke="#64748b" StrokeThickness="1" StrokeShape="RoundRectangle 8">
+                <Grid RowDefinitions="Auto,*,Auto">
+                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto" Padding="10" BackgroundColor="#f8fafc">
+                        <Label Text="📜 Журнал подій програми (Singleton Logger)" FontAttributes="Bold" TextColor="#0f172a" VerticalOptions="Center" />
+                        <Button Text="🧹 Очистити журнал" Clicked="ClearLog_Clicked" Grid.Column="1" Margin="4,0" BackgroundColor="#ef4444" TextColor="White" HeightRequest="35" />
+                        <Button Text="✖ Закрити" Clicked="CloseLog_Clicked" Grid.Column="2" BackgroundColor="#64748b" TextColor="White" HeightRequest="35" />
+                    </Grid>
+                    
+                    <CollectionView Grid.Row="1" x:Name="LogCollectionView" Margin="10">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="logging:LogEntry">
+                                <Grid ColumnDefinitions="Auto,Auto,*" Padding="4,6" ColumnSpacing="10">
+                                    <Label Text="{Binding Timestamp, StringFormat='{0:dd.MM.yyyy HH:mm:ss}'}" FontFamily="Consolas" FontSize="12" TextColor="#64748b" />
+                                    <Border Grid.Column="1" StrokeThickness="0" Padding="6,2" StrokeShape="RoundRectangle 4">
+                                        <Border.Triggers>
+                                            <DataTrigger TargetType="Border" Binding="{Binding Category}" Value="{x:Static logging:LogCategory.Filter}">
+                                                <Setter Property="BackgroundColor" Value="#dbeafe" />
+                                            </DataTrigger>
+                                            <DataTrigger TargetType="Border" Binding="{Binding Category}" Value="{x:Static logging:LogCategory.Transform}">
+                                                <Setter Property="BackgroundColor" Value="#f3e8ff" />
+                                            </DataTrigger>
+                                            <DataTrigger TargetType="Border" Binding="{Binding Category}" Value="{x:Static logging:LogCategory.Save}">
+                                                <Setter Property="BackgroundColor" Value="#dcfce7" />
+                                            </DataTrigger>
+                                        </Border.Triggers>
+                                        <Label Text="{Binding Category}" FontSize="11" FontAttributes="Bold">
+                                            <Label.Triggers>
+                                                <DataTrigger TargetType="Label" Binding="{Binding Category}" Value="{x:Static logging:LogCategory.Filter}">
+                                                    <Setter Property="TextColor" Value="#1e40af" />
+                                                </DataTrigger>
+                                                <DataTrigger TargetType="Label" Binding="{Binding Category}" Value="{x:Static logging:LogCategory.Transform}">
+                                                    <Setter Property="TextColor" Value="#6b21a8" />
+                                                </DataTrigger>
+                                                <DataTrigger TargetType="Label" Binding="{Binding Category}" Value="{x:Static logging:LogCategory.Save}">
+                                                    <Setter Property="TextColor" Value="#166534" />
+                                                </DataTrigger>
+                                            </Label.Triggers>
+                                        </Label>
+                                    </Border>
+                                    <Label Grid.Column="2" Text="{Binding Message}" FontSize="12" TextColor="#1e293b" LineBreakMode="WordWrap" />
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+
+                    <Label Grid.Row="2" x:Name="LogFilePathLabel" FontSize="11" TextColor="#94a3b8" Padding="10,5" FontFamily="Consolas" />
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+
+</ContentPage>
