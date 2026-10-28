@@ -37,7 +37,7 @@
                     </Picker>
 
                     <Label Text="Ключове слово:" VerticalOptions="Center" FontAttributes="Bold" Grid.Column="2" TextColor="#1e293b" />
-                    <Entry x:Name="KeywordEntry" Grid.Column="3" Placeholder="Введіть текст для пошуку (назва, опис, дистрибутив)..." TextColor="#0f172a" Completed="SearchButton_Clicked" />
+                    <Entry x:Name="KeywordEntry" Grid.Column="3" Placeholder="Введіть текст для пошуку (назва, опис, дистрибутив)..." TextColor="#0f172a" Completed="SearchButton_Clicked" TextChanged="OnKeywordChanged" />
                 </Grid>
 
                 <!-- Рядок 2: Динамічні атрибути (Підгрузка даних) -->

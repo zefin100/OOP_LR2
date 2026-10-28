@@ -53,16 +53,19 @@ namespace XmlProcessorApp.Models
                 return false;
             }
 
-            // Пошук за ключовим словом (у назві, описі, розташуванні, вимогах)
+            // Пошук за ключовим словом (у назві, кафедрі, категорії, ліцензії, авторі, описі, розташуванні, вимогах)
             if (!string.IsNullOrWhiteSpace(Keyword))
             {
                 string kw = Keyword.Trim();
                 bool matchesKeyword =
                     item.Name.Contains(kw, StringComparison.OrdinalIgnoreCase) ||
+                    item.Department.Contains(kw, StringComparison.OrdinalIgnoreCase) ||
+                    item.Category.Contains(kw, StringComparison.OrdinalIgnoreCase) ||
+                    item.License.Contains(kw, StringComparison.OrdinalIgnoreCase) ||
+                    item.Author.Contains(kw, StringComparison.OrdinalIgnoreCase) ||
                     item.Description.Contains(kw, StringComparison.OrdinalIgnoreCase) ||
                     item.DistributionLocation.Contains(kw, StringComparison.OrdinalIgnoreCase) ||
-                    item.Requirements.Contains(kw, StringComparison.OrdinalIgnoreCase) ||
-                    item.Author.Contains(kw, StringComparison.OrdinalIgnoreCase);
+                    item.Requirements.Contains(kw, StringComparison.OrdinalIgnoreCase);
 
                 if (!matchesKeyword) return false;
             }

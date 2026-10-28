@@ -129,6 +129,9 @@ namespace XmlProcessorApp
                 return;
             }
 
+            // Якщо була відкрита панель HTML-звіту або логу - приховуємо їх, щоб користувач бачив оновлені картки ПЗ
+            HtmlPreviewPanel.IsVisible = false;
+
             var filter = new SearchFilter
             {
                 Keyword = KeywordEntry.Text,
@@ -156,6 +159,12 @@ namespace XmlProcessorApp
         private void OnFilterChanged(object sender, EventArgs e)
         {
             // Автоматичний динамічний пошук при зміні будь-якого випадаючого списку
+            ExecuteSearch();
+        }
+
+        private void OnKeywordChanged(object sender, TextChangedEventArgs e)
+        {
+            // Автоматичний пошук «на льоту» при введенні або очищенні тексту
             ExecuteSearch();
         }
 
@@ -336,7 +345,13 @@ namespace XmlProcessorApp
                 string fileName = $"FilteredSoftware_{DateTime.Now:yyyyMMdd_HHmmss}";
 
                 string fileId = await exportService.ExportAsync(_filteredItems, fileName, _driveManager);
-                await DisplayAlert("Успіх", $"Відфільтрований XML успішно збережено на Google Drive!\nID: {fileId}", "OK");
+                await DisplayAlert("Збережено на Google Drive",
+                    $"Відфільтрований XML успішно завантажено на ваш Google Drive!\n\n" +
+                    $"• Файл: {fileName}.xml\n" +
+                    $"• Збережено записів: {_filteredItems.Count}\n" +
+                    $"• Хмарний ідентифікатор файлу (Google Drive File ID): {fileId}\n\n" +
+                    $"Файл уже доступний у вашому хмарному сховищі Google Drive.",
+                    "OK");
             }
             catch (Exception ex)
             {
@@ -359,7 +374,13 @@ namespace XmlProcessorApp
                 string fileName = $"SoftwareReport_{DateTime.Now:yyyyMMdd_HHmmss}";
 
                 string fileId = await exportService.ExportAsync(_filteredItems, fileName, _driveManager);
-                await DisplayAlert("Успіх", $"Згенерований HTML-звіт успішно збережено на Google Drive!\nID: {fileId}", "OK");
+                await DisplayAlert("Збережено на Google Drive",
+                    $"Згенерований HTML-звіт успішно завантажено на ваш Google Drive!\n\n" +
+                    $"• Файл: {fileName}.html\n" +
+                    $"• Включено записів: {_filteredItems.Count}\n" +
+                    $"• Хмарний ідентифікатор файлу (Google Drive File ID): {fileId}\n\n" +
+                    $"Ви можете відкрити його прямо в браузері через Google Drive.",
+                    "OK");
             }
             catch (Exception ex)
             {
