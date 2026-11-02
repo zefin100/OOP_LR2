@@ -1,11 +1,10 @@
 @startuml UseCaseDiagram
-title Прецеденти використання (Use Case Diagram) — Лабораторна робота №2*\nТема: Обробник XML «Програмне забезпечення факультету» (ФКНК КНУ, Варіант 9)
+title Прецеденти використання (Use Case Diagram) — Лабораторна робота №2*\nТема: «Програмне забезпечення на мережі факультету» (ФКНК КНУ, Варіант 9)
 
-left to right direction
+top to bottom direction
 skinparam defaultFontName "Segoe UI"
 skinparam roundcorner 10
 skinparam shadowing false
-skinparam packageStyle rectangle
 
 skinparam actor {
     BackgroundColor #dbeafe
@@ -14,81 +13,71 @@ skinparam actor {
 }
 
 skinparam usecase {
-    BackgroundColor #f8fafc
-    BorderColor #3b82f6
+    BackgroundColor #eff6ff
+    BorderColor #2563eb
     ArrowColor #2563eb
     FontSize 12
+    FontColor #0f172a
 }
 
-actor "Користувач\n(Студент / Адміністратор мережі)" as User
+skinparam rectangle {
+    BackgroundColor #f8fafc
+    BorderColor #3b82f6
+    FontSize 14
+    FontColor #1e293b
+}
+
+actor "Користувач\n(Студент / Адмін)" as User
 actor "Google Drive API\n(Хмарне сховище)" as GDrive <<External System>>
 
 rectangle "Десктопний застосунок «Обробник XML мережі факультету» (.NET MAUI)" {
 
-    package "Завантаження даних" {
-        usecase "UC-1: Завантажити XML-файл\nз локального диска" as UC_LoadLocal
-        usecase "UC-2: Завантажити XML-файл\nз Google Drive" as UC_LoadDrive
-        usecase "UC-3: Динамічно підвантажити\nпараметри пошуку з XML" as UC_Preload
-    }
+    usecase "UC-1: Завантажити XML з диска" as UC_LoadLocal
+    usecase "UC-2: Завантажити XML з Google Drive" as UC_LoadDrive
+    usecase "UC-3: Динамічно підвантажити параметри з XML" as UC_Preload
+    usecase "UC-4: Обрати стратегію парсингу\n(SAX / DOM / LINQ to XML)" as UC_Strategy
+    usecase "UC-5: Фільтрувати програмне забезпечення\n(кафедра, категорія, автор, ліцензія)" as UC_Filter
+    usecase "UC-6: Очистити параметри пошуку (Clear)" as UC_Clear
+    usecase "UC-7: Виконати XSLT-трансформацію у HTML" as UC_Transform
+    usecase "UC-8: Відкрити HTML-звіт у браузері" as UC_Browser
+    usecase "UC-9: Експортувати дані на Google Drive\n(XML / HTML через Factory Method)" as UC_Export
+    usecase "UC-10: Переглянути журнал подій (Singleton Logger)" as UC_Logs
+    usecase "UC-11: Переглянути довідку про програму" as UC_Help
+    usecase "UC-12: Завершити роботу з додатком\n(з підтвердженням «Так / Ні»)" as UC_Exit
 
-    package "Аналіз та фільтрація (Strategy)" {
-        usecase "UC-4: Обрати стратегію парсингу\n(SAX / DOM / LINQ to XML)" as UC_SelectStrategy
-        usecase "UC-5: Фільтрувати програмне\nзабезпечення" as UC_Filter
-        usecase "UC-5.1: Фільтр за кафедрою" as UC_F_Dept
-        usecase "UC-5.2: Фільтр за видом (категорією)" as UC_F_Cat
-        usecase "UC-5.3: Фільтр за автором/розробником" as UC_F_Author
-        usecase "UC-5.4: Фільтр за умовами (ліцензією)" as UC_F_License
-        usecase "UC-5.5: Пошук за ключовим словом" as UC_F_Keyword
-        usecase "UC-6: Очистити параметри\nпошуку (Clear)" as UC_Clear
-    }
-
-    package "Трансформація та експорт (Factory Method)" {
-        usecase "UC-7: Виконати XSLT-трансформацію\nу формат HTML" as UC_Transform
-        usecase "UC-7.1: Відкрити HTML-звіт\nу браузері" as UC_OpenBrowser
-        usecase "UC-8: Експортувати відфільтровані\nдані на Google Drive" as UC_ExportDrive
-        usecase "UC-8.1: Експорт у форматі XML\n(XmlDataExporter)" as UC_ExportXml
-        usecase "UC-8.2: Експорт у форматі HTML\n(HtmlDataExporter)" as UC_ExportHtml
-    }
-
-    package "Журналювання та сервіси (Singleton)" {
-        usecase "UC-9: Переглянути журнал\nподій (Logger)" as UC_ViewLogs
-        usecase "UC-9.1: Очистити журнал подій" as UC_ClearLogs
-        usecase "UC-10: Переглянути довідку\nпро програму" as UC_Help
-        usecase "UC-11: Завершити роботу з додатком\n(з підтвердженням Так/Ні)" as UC_Exit
-    }
+    ' Прихований вертикальний потік для красивого вирівнювання в одну колонку
+    UC_LoadLocal -[hidden]down-> UC_LoadDrive
+    UC_LoadDrive -[hidden]down-> UC_Preload
+    UC_Preload -[hidden]down-> UC_Strategy
+    UC_Strategy -[hidden]down-> UC_Filter
+    UC_Filter -[hidden]down-> UC_Clear
+    UC_Clear -[hidden]down-> UC_Transform
+    UC_Transform -[hidden]down-> UC_Browser
+    UC_Browser -[hidden]down-> UC_Export
+    UC_Export -[hidden]down-> UC_Logs
+    UC_Logs -[hidden]down-> UC_Help
+    UC_Help -[hidden]down-> UC_Exit
 }
 
-' Зв'язки користувача з головними прецедентами
+' Зв'язки користувача (зліва)
 User --> UC_LoadLocal
 User --> UC_LoadDrive
-User --> UC_SelectStrategy
+User --> UC_Strategy
 User --> UC_Filter
 User --> UC_Clear
 User --> UC_Transform
-User --> UC_ExportDrive
-User --> UC_ViewLogs
+User --> UC_Export
+User --> UC_Logs
 User --> UC_Help
 User --> UC_Exit
 
-' Взаємодія з Google Drive
+' Зв'язки із зовнішньою хмарою Google Drive (справа)
 UC_LoadDrive --> GDrive : <<OAuth 2.0 / Read>>
-UC_ExportDrive --> GDrive : <<OAuth 2.0 / Write>>
+UC_Export --> GDrive : <<OAuth 2.0 / Write>>
 
-' Залежності include та extend
+' Залежності include / extend
 UC_LoadLocal ..> UC_Preload : <<include>>
 UC_LoadDrive ..> UC_Preload : <<include>>
-
-UC_F_Dept ..> UC_Filter : <<extend>>
-UC_F_Cat ..> UC_Filter : <<extend>>
-UC_F_Author ..> UC_Filter : <<extend>>
-UC_F_License ..> UC_Filter : <<extend>>
-UC_F_Keyword ..> UC_Filter : <<extend>>
-
-UC_OpenBrowser ..> UC_Transform : <<extend>>
-
-UC_ExportXml ..> UC_ExportDrive : <<extend>>
-UC_ExportHtml ..> UC_ExportDrive : <<extend>>
-
-UC_ClearLogs ..> UC_ViewLogs : <<extend>>
+UC_Browser ..> UC_Transform : <<extend>>
 
 @enduml
